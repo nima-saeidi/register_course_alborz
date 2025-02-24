@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; display: none; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        #logout-btn { display: none; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Admin Login</h1>
+    <form id="login-form">
+        <label>Username: <input type="text" id="username"></label>
+        <label>Password: <input type="password" id="password"></label>
+        <button type="submit">Login</button>
+    </form>
+
+    <button id="logout-btn" onclick="logout()">Logout</button>
+
+    <h1>Admin - User List</h1>
+    <table id="user-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Last Name</th>
+                <th>Birth Date</th>
+                <th>Email</th>
+                <th>Mobile Number</th>
+                <th>Social Media</th>
+            </tr>
+        </thead>
+        <tbody id="user-table-body"></tbody>
+    </table>
+
+    <script>
+        let token = localStorage.getItem("token");
+
+        document.getElementById("login-form").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            const response = await fetch("/admin/login/", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ username, password })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                token = data.access_token;
+                localStorage.setItem("token", token);
+                showUsers();
+            } else {
+                alert("Invalid credentials");
+            }
+        });
+
+        async function showUsers() {
+            if (!token) return;
+            document.getElementById("user-table").style.display = "table";
+            document.getElementById("login-form").style.display = "none";
+            document.getElementById("logout-btn").style.display = "block";
+
+            const response = await fetch("/admin/users/", {
+                headers: { "Authorization": "Bearer " + token }
+            });
+
+            if (response.ok) {
+                const users = await response.json();
+                const tableBody = document.getElementById("user-table-body");
+                tableBody.innerHTML = "";
+                users.forEach(user => {
+                    tableBody.innerHTML += `<tr>
+                        <td>${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${user.last_name}</td>
+                        <td>${user.birth_date}</td>
+                        <td>${user.email}</td>
+                        <td>${user.mobile_number}</td>
+                        <td>${user.social_media_id || 'N/A'}</td>
+                    </tr>`;
+                });
+            } else {
+                alert("Session expired. Please log in again.");
+                logout();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem("token");
+            location.reload();
+        }
+
+        if (token) {
+            showUsers();
+        }
+    </script>
+</body>
+</html>

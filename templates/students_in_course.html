@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Students in {{ course.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6 text-center">Students in Course: {{ course.name }}</h1>
+    <a href="/admin/courses/{{ course.id }}/students/export" class="bg-blue-500 text-white px-4 py-2 rounded">Download
+        Excel</a>
+
+    <div class="mb-4">
+        <label for="sort" class="mr-2">Sort by:</label>
+        <select id="sort" class="border rounded p-2" onchange="sortStudents()">
+            <option value="">None</option>
+            <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name</option>
+            <option value="last_name" {% if sort_by == 'last_name' %}selected{% endif %}>Last Name</option>
+            <option value="mobile_number" {% if sort_by == 'mobile_number' %}selected{% endif %}>Mobile Number</option>
+        </select>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full table-auto border border-gray-200 shadow-md rounded-lg">
+            <thead class="bg-gray-100">
+                <tr class="text-left text-gray-700">
+                    <th class="px-4 py-2 border">ID</th>
+                    <th class="px-4 py-2 border">Name</th>
+                    <th class="px-4 py-2 border">Last Name</th>
+                    <th class="px-4 py-2 border">Mobile Number</th>
+                    <th class="px-4 py-2 border">Home Address</th>
+                    <th class="px-4 py-2 border">Course</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2 border">{{ student.id }}</td>
+                    <td class="px-4 py-2 border">{{ student.name }}</td>
+                    <td class="px-4 py-2 border">{{ student.last_name }}</td>
+                    <td class="px-4 py-2 border">{{ student.mobile_number }}</td>
+                    <td class="px-4 py-2 border">{{ student.home_address }}</td>
+                    <td class="px-4 py-2 border">{{ student.course.name }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function sortStudents() {
+        const sortValue = document.getElementById("sort").value;
+        const urlParams = new URLSearchParams(window.location.search);
+        if (sortValue) {
+            urlParams.set("sort_by", sortValue);
+        } else {
+            urlParams.delete("sort_by");
+        }
+        window.location.search = urlParams.toString();
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}User Details{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">User Details</h1>
+
+    <div class="bg-white p-6 shadow-lg rounded-lg">
+        <div class="mb-4">
+            <p class="text-lg"><strong>Name:</strong> {{ user.name }} {{ user.last_name }}</p>
+            <p class="text-lg"><strong>Mobile:</strong> {{ user.mobile_number }}</p>
+            <p class="text-lg"><strong>Home Number:</strong> {{ user.home_number or 'N/A' }}</p>
+            <p class="text-lg"><strong>Address:</strong> {{ user.home_address or 'N/A' }}</p>
+        </div>
+    </div>
+
+    <a href="/admin/users/" class="mt-6 inline-block text-blue-600 hover:underline">
+        ← Back to Users
+    </a>
+</div>
+{% endblock %}
