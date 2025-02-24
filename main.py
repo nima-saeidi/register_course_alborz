@@ -15,6 +15,8 @@ import os
 from typing import Optional
 from fastapi.responses import HTMLResponse, Response
 import pandas as pd
+from io import BytesIO
+from fastapi.middleware.cors import CORSMiddleware
 
 
 POSTGRES_USER = "postgres"
@@ -22,6 +24,13 @@ POSTGRES_PASSWORD = "n1m010"
 POSTGRES_DB = "course"
 POSTGRES_HOST = "localhost"
 POSTGRES_PORT = "5432"
+
+
+# POSTGRES_USER = "postgres"
+# POSTGRES_PASSWORD = "n1m010"
+# POSTGRES_DB = "course"
+# POSTGRES_HOST = "localhost"
+# POSTGRES_PORT = "5432"
 
 SQLALCHEMY_DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 templates = Jinja2Templates(directory="templates")
@@ -106,6 +115,14 @@ class CourseResponse(BaseModel):
 app = FastAPI()
 
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins (replace with specific origins in production)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
+
 def get_db():
     db = SessionLocal()
     try:
@@ -123,15 +140,16 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 
-@app.get("/courses/names")
-def get_all_course_names(db: Session = Depends(get_db)):
+@app.get("/courses")
+def get_all_courses(db: Session = Depends(get_db)):
     courses = db.query(Course).all()  # Get all courses
     if not courses:
         raise HTTPException(status_code=404, detail="No courses found")
 
-    # Extracting only course names
-    course_names = [course.name for course in courses]
-    return {"course_names": course_names}
+    # Return a list of dictionaries with both id and name
+    course_list = [{"id": course.id, "name": course.name} for course in courses]
+
+    return {"courses": course_list}
 
 
 Base.metadata.create_all(bind=engine)
@@ -156,8 +174,15 @@ class UserCreate(BaseModel):
     home_address: str | None = None
     course_id: int | None = None
 
+
 @app.post("/register/")
 def register_user(user_data: UserCreate, db: Session = Depends(get_db)):
+    # Check if course_id is provided and exists
+    # if user_data.course_id:
+    #     course = db.query(Course).filter(Course.id == user_data.course_id).first()
+    #     if not course:
+    #         raise HTTPException(status_code=400, detail="Invalid course_id: Course does not exist")
+
     user = User(
         name=user_data.name,
         last_name=user_data.last_name,
@@ -173,6 +198,9 @@ def register_user(user_data: UserCreate, db: Session = Depends(get_db)):
     return {"message": "User registered successfully", "user_id": user.id}
 
 
+import shutil
+import os
+
 @app.post("/upload-profile/{user_id}")
 def upload_profile_image(user_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
@@ -180,13 +208,18 @@ def upload_profile_image(user_id: int, file: UploadFile = File(...), db: Session
         raise HTTPException(status_code=404, detail="User not found")
 
     file_path = os.path.join(UPLOAD_DIR, f"profile_{user_id}.jpg")
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    print(f"Saving file to: {file_path}")  # Debugging output
 
-    user.profile_image_path = file_path
-    db.commit()
-    return {"message": "Profile image uploaded successfully"}
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
 
+        user.profile_image_path = file_path
+        db.commit()
+        return {"message": "Profile image uploaded successfully", "file_path": file_path}
+    except Exception as e:
+        print(f"Error saving file: {e}")
+        raise HTTPException(status_code=500, detail="File upload failed")
 
 @app.post("/upload-info-card/{user_id}")
 def upload_info_card_image(user_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
