@@ -19,18 +19,18 @@ from io import BytesIO
 from fastapi.middleware.cors import CORSMiddleware
 
 
-POSTGRES_USER = "postgres"
-POSTGRES_PASSWORD = "n1m010"
-POSTGRES_DB = "course"
-POSTGRES_HOST = "localhost"
-POSTGRES_PORT = "5432"
-
-
 # POSTGRES_USER = "postgres"
 # POSTGRES_PASSWORD = "n1m010"
 # POSTGRES_DB = "course"
 # POSTGRES_HOST = "localhost"
 # POSTGRES_PORT = "5432"
+
+
+POSTGRES_USER = "alborz"
+POSTGRES_PASSWORD = "n1m010"
+POSTGRES_DB = "course_register"
+POSTGRES_HOST = "localhost"
+POSTGRES_PORT = "5432"
 
 SQLALCHEMY_DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 templates = Jinja2Templates(directory="templates")
