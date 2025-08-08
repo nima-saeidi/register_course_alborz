@@ -26,8 +26,8 @@ from fastapi.middleware.cors import CORSMiddleware
 # POSTGRES_PORT = "5432"
 
 
-POSTGRES_USER = "alborz"
-POSTGRES_PASSWORD = "n1m010"
+POSTGRES_USER = "academyuser"
+POSTGRES_PASSWORD = "strongpassword"
 POSTGRES_DB = "course_register"
 POSTGRES_HOST = "localhost"
 POSTGRES_PORT = "5432"
